@@ -169,16 +169,19 @@ static void CollectPaths(std::vector<std::string>& paths, const std::string& pat
 
 static bool MoveDirectory(const std::string& source, const std::string& destination)
 {
-	if (!MoveFileEx(source.c_str(), destination.c_str(), MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH)) {
-		// SHFileOperation requires file names to be terminated with two \0s
-		std::string tmpSource = source + std::string(1, '\0');
-		std::string tmpDestination = destination + std::string(1, '\0');
+	// SHFileOperation requires file names to be terminated with two \0s
+	std::string tmpSource = source + std::string(1, '\0');
+	std::string tmpDestination = destination + std::string(1, '\0');
 
-		SHFILEOPSTRUCT fop;
+	SHFILEOPSTRUCT fop;
+	fop.wFunc = FO_MOVE;
+	fop.pFrom = tmpSource.c_str();
+	fop.pTo = tmpDestination.c_str();
+	fop.fFlags = FOF_NO_UI;
+
+	if (SHFileOperation(&fop) != 0) {
 		fop.wFunc = FO_COPY;
-		fop.pFrom = tmpSource.c_str();
-		fop.pTo = tmpDestination.c_str();
-		fop.fFlags = FOF_NO_UI;
+
 		if (SHFileOperation(&fop) != 0)
 			return false;
 	}
